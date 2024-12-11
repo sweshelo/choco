@@ -4,7 +4,10 @@
   "description": "Prototype with TypeScript in Liere",
   "main": "index.js",
   "scripts": {
-    "schema:update": "supabase gen types typescript --linked > src/types/schema.ts"
+    "schema:update": "supabase gen types typescript --linked > src/types/schema.ts",
+    "build": "node build.js",
+    "dev": "ts-node index.ts",
+    "start": "node dist/index.js"
   },
   "repository": {
     "type": "git",
