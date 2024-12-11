@@ -1,0 +1,30 @@
+{
+  "name": "choco",
+  "version": "0.0.0",
+  "description": "Prototype with TypeScript in Liere",
+  "main": "index.js",
+  "scripts": {
+    "schema:update": "supabase gen types typescript --linked > src/types/schema.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sweshelo/choco.git"
+  },
+  "author": "sweshelo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sweshelo/choco/issues"
+  },
+  "homepage": "https://github.com/sweshelo/choco#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.18.0",
+    "@typescript-eslint/parser": "^8.18.0",
+    "eslint": "^9.16.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "esbuild": "^0.24.0",
+    "supabase": "^2.0.0"
+  }
+}
