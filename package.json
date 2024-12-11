@@ -20,7 +20,8 @@
     "url": "https://github.com/sweshelo/choco/issues"
   },
   "lint-staged": {
-    "*.ts": "eslint --fix && prettier --write"
+    "*.ts": "eslint --fix",
+    ".": "prettier --write"
   },
   "homepage": "https://github.com/sweshelo/choco#readme",
   "devDependencies": {
@@ -37,6 +38,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
+    "date-fns": "^4.1.0",
     "esbuild": "^0.24.0",
     "prettier": "^3.4.2",
     "supabase": "^2.0.0"

@@ -1,4 +1,4 @@
-export default function main(){
+export default function main() {
   console.log('HELL WORD 👹');
 }
 
