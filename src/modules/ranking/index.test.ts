@@ -1,4 +1,4 @@
-import module from './ranking'
+import module from '.'
 
 // TODO: jestでテスト書く
 (async () => {
