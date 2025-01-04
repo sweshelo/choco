@@ -209,6 +209,17 @@ export type Database = {
           ranking: number
         }[]
       }
+      get_records_by_player_names: {
+        Args: {
+          player_names: string[]
+        }
+        Returns: {
+          id: number
+          player_name: string
+          recorded_at: string
+          point: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
