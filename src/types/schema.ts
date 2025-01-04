@@ -216,7 +216,7 @@ export type Database = {
         Returns: {
           id: number
           player_name: string
-          created_at: string
+          recorded_at: string
           point: number
         }[]
       }

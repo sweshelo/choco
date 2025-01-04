@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
 import { fetchUserLatestRecords } from '../subabase/module';
 
@@ -16,6 +16,7 @@ export default async function ranking() {
       try {
         const html = await (await fetch(originalPageURL(index))).text();
         const $ = cheerio.load(html);
+        const recordedAt = parse($('.hr0').eq(1).next().text().trim().replace('最終更新:', ''), 'yyyy.MM.dd HH:mm', new Date());
 
         $('#ranking_data')
           .find('li')
@@ -84,6 +85,7 @@ export default async function ranking() {
                   last: icon2 === '0' ? undefined : icon2,
                 },
               },
+              recordedAt,
             });
           });
       } catch (e) {
@@ -99,6 +101,7 @@ export default async function ranking() {
     const record = latestRecords?.find(record => record?.player_name === rank.name);
     if (record) {
       rank.points.diff = rank.points.current - record.point;
+      rank.elapsed = Math.floor((new Date().getTime() - new Date(record.recorded_at).getTime()) / 1000);
     }
   });
 
