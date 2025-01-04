@@ -14,6 +14,6 @@ export interface Ranking {
       last?: string;
     };
   };
-  recordedAt?: Date;
+  recordedAt: Date;
   elapsed?: number;
 }

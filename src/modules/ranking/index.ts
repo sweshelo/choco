@@ -1,7 +1,8 @@
 import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
-import { fetchUserLatestRecords } from '../subabase/module';
+import { fetchUserLatestRecords, insertRecords } from '../subabase/module';
+import { toZonedTime } from 'date-fns-tz';
 
 const originalPageURL = (index: number) => {
   const month = format(new Date(), 'yyyyMM');
@@ -16,7 +17,7 @@ export default async function ranking() {
       try {
         const html = await (await fetch(originalPageURL(index))).text();
         const $ = cheerio.load(html);
-        const recordedAt = parse($('.hr0').eq(1).next().text().trim().replace('最終更新:', ''), 'yyyy.MM.dd HH:mm', new Date());
+        const recordedAt = toZonedTime(parse($('.hr0').eq(1).next().text().trim().replace('最終更新:', ''), 'yyyy.MM.dd HH:mm', new Date()), 'Asia/Tokyo');
 
         $('#ranking_data')
           .find('li')
@@ -105,5 +106,7 @@ export default async function ranking() {
     }
   });
 
-  return ranking;
+  await insertRecords(ranking);
+
+  return;
 }
