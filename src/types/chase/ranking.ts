@@ -1,6 +1,9 @@
 export interface Ranking {
   rank: number;
-  points: number;
+  points: {
+    current: number;
+    diff?: number;
+  },
   chara: string;
   name: string;
   achivement: {

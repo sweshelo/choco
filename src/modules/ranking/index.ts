@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import { format } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
+import { fetchUserLatestRecords } from '../subabase/module';
 
 const originalPageURL = (index: number) => {
   const month = format(new Date(), 'yyyyMM');
@@ -70,7 +71,9 @@ export default async function ranking() {
 
             ranking.push({
               rank,
-              points,
+              points: {
+                current: points,
+              },
               chara,
               name,
               achivement: {
@@ -88,6 +91,16 @@ export default async function ranking() {
       }
     })
   );
+
+  const players = ranking.map(({ name }) => name).filter(name => name !== 'プレーヤー');
+  const latestRecords = await fetchUserLatestRecords({ players });
+
+  ranking.forEach((rank) => {
+    const record = latestRecords?.find(record => record?.player_name === rank.name);
+    if (record) {
+      rank.points.diff = rank.points.current - record.point;
+    }
+  });
 
   return ranking;
 }
