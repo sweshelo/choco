@@ -18,8 +18,8 @@ export const fetchUserLatestRecords = async({ players }: FetchUsersParams) => {
   return data;
 }
 
-export const insertRecords = async(records: Ranking[]) => {
-  const _record = records.map(record => ({
+export const insertRecords = async(_records: Ranking[]) => {
+  const records = _records.map(record => ({
     player_name: record.name,
     chara: record.chara,
     point: record.points.current,
@@ -28,9 +28,9 @@ export const insertRecords = async(records: Ranking[]) => {
     achievement: record.achivement.title,
     recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", { timeZone: 'Asia/Tokyo' }),
     elapsed: record.elapsed,
-  }))
+  })).filter(record => record.diff !== 0)
 
-  const { error } = await supabase.from('record').insert(_record);
+  const { error } = await supabase.from('record').insert(records);
 
   if (error) {
     console.error(error);
