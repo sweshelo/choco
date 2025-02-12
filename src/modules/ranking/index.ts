@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
-import { fetchUsers, insertRecords } from '../subabase/module';
+import { fetchAnons, fetchUsers, insertRecords } from '../subabase/module';
 import { toZonedTime } from 'date-fns-tz';
 
 const originalPageURL = (index: number) => {
@@ -97,6 +97,7 @@ export default async function ranking() {
 
   const players = ranking.map(({ name }) => name).filter(name => name !== 'プレーヤー');
   const users = await fetchUsers({ players })
+  const anons = await fetchAnons();
 
   ranking.forEach((rank) => {
     const player = users?.find(player => player?.name === rank.name);
@@ -106,7 +107,9 @@ export default async function ranking() {
     }
   });
 
-  await insertRecords(ranking);
+  await insertRecords(ranking.filter(record => {
+    return !(record.name === 'プレーヤー' && anons.some(anon => anon.point === record.points.current && anon.ranking === record.rank))
+  }));
 
   return;
 }
