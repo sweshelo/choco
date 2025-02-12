@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
-import { fetchUserLatestRecords, insertRecords } from '../subabase/module';
+import { fetchUsers, insertRecords } from '../subabase/module';
 import { toZonedTime } from 'date-fns-tz';
 
 const originalPageURL = (index: number) => {
@@ -96,13 +96,13 @@ export default async function ranking() {
   );
 
   const players = ranking.map(({ name }) => name).filter(name => name !== 'プレーヤー');
-  const latestRecords = await fetchUserLatestRecords({ players });
+  const users = await fetchUsers({ players })
 
   ranking.forEach((rank) => {
-    const record = latestRecords?.find(record => record?.player_name === rank.name);
-    if (record) {
-      rank.points.diff = rank.points.current - record.point;
-      rank.elapsed = Math.floor((new Date().getTime() - new Date(record.recorded_at).getTime()) / 1000);
+    const player = users?.find(player => player?.name === rank.name);
+    if (player) {
+      rank.points.diff = rank.points.current - (player.points ?? 0);
+      rank.elapsed = Math.floor((new Date().getTime() - new Date(player.updated_at ?? '').getTime()) / 1000);
     }
   });
 

@@ -6,7 +6,7 @@ interface FetchUsersParams {
   players: string[]
 }
 
-export const fetchUserLatestRecords = async({ players }: FetchUsersParams) => {
+export const fetchUserLatestRecords = async ({ players }: FetchUsersParams) => {
   const { data, error } = await supabase
     .rpc('get_records_by_player_names', { player_names: players });
 
@@ -18,7 +18,16 @@ export const fetchUserLatestRecords = async({ players }: FetchUsersParams) => {
   return data;
 }
 
-export const insertRecords = async(_records: Ranking[]) => {
+export const fetchUsers = async ({ players }: FetchUsersParams) => {
+  const { data, error } = await supabase.from('player').select('*').in('name', players)
+  if (error) {
+    console.error(error)
+    return null
+  }
+  return data;
+}
+
+export const insertRecords = async (_records: Ranking[]) => {
   const records = _records.map(record => ({
     player_name: record.name,
     chara: record.chara,
@@ -28,12 +37,24 @@ export const insertRecords = async(_records: Ranking[]) => {
     achievement: record.achivement.title,
     recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", { timeZone: 'Asia/Tokyo' }),
     elapsed: record.elapsed,
-  })).filter(record => record.diff !== 0)
+  }))
 
-  const { error } = await supabase.from('record').insert(records);
+  const { error: insertError } = await supabase.from('record').insert(records.filter(record => record.diff !== 0));
 
-  if (error) {
-    console.error(error);
+  if (insertError) {
+    console.error(insertError);
+    return null;
+  }
+
+  const { error: updateError } = await supabase.from('player').upsert(records.map(record => ({
+    name: record.player_name,
+    ranking: record.ranking,
+    updated_at: record.recorded_at,
+    points: record.point,
+  })).filter(player => player.name !== 'プレーヤー'), { onConflict: 'name' })
+
+  if (updateError) {
+    console.error(updateError)
     return null;
   }
 

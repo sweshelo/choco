@@ -69,6 +69,7 @@ export type Database = {
           effective_average: number | null
           id: number
           name: string
+          points: number | null
           ranking: number | null
           updated_at: string | null
         }
@@ -79,6 +80,7 @@ export type Database = {
           effective_average?: number | null
           id?: number
           name: string
+          points?: number | null
           ranking?: number | null
           updated_at?: string | null
         }
@@ -89,6 +91,7 @@ export type Database = {
           effective_average?: number | null
           id?: number
           name?: string
+          points?: number | null
           ranking?: number | null
           updated_at?: string | null
         }
