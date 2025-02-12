@@ -6,7 +6,7 @@
   "scripts": {
     "schema:update": "supabase gen types typescript --linked > src/types/schema.ts",
     "build": "node build.js",
-    "dev": "ts-node index.ts",
+    "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
     "prepare": "husky"
   },
