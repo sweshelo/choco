@@ -27,6 +27,11 @@ export const fetchUsers = async ({ players }: FetchUsersParams) => {
   return data;
 }
 
+export const fetchAnons = async () => {
+  const { data } = await supabase.from('record').select('*').eq('player_name', 'プレーヤー').order('recorded_at', { ascending: false }).limit(50);
+  return data ?? [];
+}
+
 export const insertRecords = async (_records: Ranking[]) => {
   const records = _records.map(record => ({
     player_name: record.name,
