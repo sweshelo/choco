@@ -45,6 +45,10 @@ export const insertRecords = async (_records: Ranking[]) => {
   }))
 
   const { error: insertError } = await supabase.from('record').insert(records.filter(record => record.diff !== 0));
+  console.info('=== Updated ===')
+  records.filter(record => record.diff !== 0).forEach(record => {
+    console.info("%s - %dP (+%dP) | ♺ %dsec.", record.player_name, record.point, record.diff, record.elapsed)
+  })
 
   if (insertError) {
     console.error(insertError);
