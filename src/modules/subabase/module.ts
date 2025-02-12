@@ -28,8 +28,19 @@ export const fetchUsers = async ({ players }: FetchUsersParams) => {
 }
 
 export const fetchAnons = async () => {
-  const { data } = await supabase.from('record').select('*').eq('player_name', 'プレーヤー').order('recorded_at', { ascending: false }).limit(50);
-  return data ?? [];
+  const { data, error } = await supabase
+    .from('record')
+    .select('*')
+    .eq('player_name', 'プレーヤー')
+    .order('recorded_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('匿名プレイヤーデータの取得に失敗しました:', error);
+    return [];
+  }
+
+  return data;
 }
 
 export const insertRecords = async (_records: Ranking[]) => {
