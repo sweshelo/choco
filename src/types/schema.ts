@@ -41,7 +41,7 @@ export type Database = {
           icon_last: string | null
           id: number
           markup: string | null
-          title: string | null
+          title: string
         }
         Insert: {
           created_at?: string
@@ -49,7 +49,7 @@ export type Database = {
           icon_last?: string | null
           id?: number
           markup?: string | null
-          title?: string | null
+          title: string
         }
         Update: {
           created_at?: string
@@ -57,7 +57,7 @@ export type Database = {
           icon_last?: string | null
           id?: number
           markup?: string | null
-          title?: string | null
+          title?: string
         }
         Relationships: []
       }
