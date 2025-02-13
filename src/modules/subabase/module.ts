@@ -1,6 +1,7 @@
 import { Ranking } from '@/types/chase/ranking';
 import { supabase } from './client'
 import { format } from 'date-fns-tz';
+import { Achievement as DBAchievement } from '@/types/chase';
 
 interface FetchUsersParams {
   players: string[]
@@ -50,7 +51,7 @@ export const insertRecords = async (_records: Ranking[]) => {
     point: record.points.current,
     diff: record.points.diff,
     ranking: record.rank,
-    achievement: record.achivement.title,
+    achievement: record.achievement.title,
     recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", { timeZone: 'Asia/Tokyo' }),
     elapsed: record.elapsed,
   }))
@@ -77,6 +78,14 @@ export const insertRecords = async (_records: Ranking[]) => {
     console.error(updateError)
     return null;
   }
+
+  return;
+}
+
+export type Achievement = Omit<DBAchievement, 'created_at' | 'id'>
+export const upsertAchievements = async (achievements: Achievement[]) => {
+  const { error } = await supabase.from('achievement').upsert(achievements, { onConflict: 'title' })
+  if (error) console.error(error);
 
   return;
 }

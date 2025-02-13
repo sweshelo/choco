@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
-import { fetchAnons, fetchUsers, insertRecords } from '../subabase/module';
+import { Achievement, fetchAnons, fetchUsers, insertRecords, upsertAchievements } from '../subabase/module';
 import { toZonedTime } from 'date-fns-tz';
 
 const originalPageURL = (index: number) => {
@@ -78,7 +78,7 @@ export default async function ranking() {
               },
               chara,
               name,
-              achivement: {
+              achievement: {
                 title: achievementTitle, // || achievementMarkup || '', // マークアップの構成が色付き/色無しで変わるため、色無しの場合は空文字列となる。
                 markup: achievementMarkup,
                 icon: {
@@ -110,6 +110,13 @@ export default async function ranking() {
   await insertRecords(ranking.filter(record => {
     return !(record.name === 'プレーヤー' && anons.some(anon => anon.point === record.points.current && anon.ranking === record.rank))
   }));
+
+  await upsertAchievements(ranking.map<Achievement>(record => ({
+    title: record.achievement.title,
+    markup: record.achievement.markup ?? null,
+    icon_first: record.achievement.icon.first ?? null,
+    icon_last: record.achievement.icon.last ?? null,
+  })).filter((element, index, self) => self.findIndex(e => e.title === element.title) === index))
 
   return;
 }

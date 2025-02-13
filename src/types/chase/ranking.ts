@@ -6,7 +6,7 @@ export interface Ranking {
   },
   chara: string;
   name: string;
-  achivement: {
+  achievement: {
     title: string;
     markup?: string;
     icon: {
