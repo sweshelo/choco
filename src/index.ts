@@ -43,6 +43,7 @@ export default function main() {
   console.log('HELL WORD 👹');
   console.log('CHOCO STARTED');
   fetchRankingWithLogging();
+  analyzeWithLogging();
   setInterval(fetchRankingWithLogging, 1000 * 60 * 3);
   setInterval(analyzeWithLogging, 1000 * 60 * 60 * 12);
 }
