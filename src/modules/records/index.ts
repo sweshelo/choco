@@ -38,9 +38,18 @@ export default async function analyze() {
 
   // 各プレイヤーの average と effective_average を算出
   Object.keys(playerRecords).forEach(playerName => {
-    const recs = playerRecords[playerName].filter(isValidRecord);
+    const recs = playerRecords[playerName].filter(isValidRecord).sort((a, b) => {
+      return new Date(b.recorded_at ?? '').getTime() - new Date(a.recorded_at ?? '').getTime();
+    });
+
+    const [last] = recs;
+    const threshould = 1000 * 60 * 60 * 24 * 50; // 50日
+
+    // 記録が5件以下か、最終プレイから50日経過している場合は偏差値算出対象外にする
+    if((new Date()).getTime() - (new Date(last.recorded_at ?? '')).getTime() > threshould || recs.length <= 5) return;
+
     const count = recs.length;
-    // 平均点 (point の平均)
+    // 平均点 (diff の平均)
     const total = recs.reduce((sum, rec) => sum + rec.diff!, 0);
     const average = total / count;
 
