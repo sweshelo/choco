@@ -44,7 +44,7 @@ export default function main() {
   console.log('CHOCO STARTED');
   fetchRankingWithLogging();
   analyzeWithLogging();
-  setInterval(fetchRankingWithLogging, 1000 * 400);
+  setInterval(fetchRankingWithLogging, 1000 * 240);
   setInterval(analyzeWithLogging, 1000 * 60 * 60 * 12);
 }
 
