@@ -1,7 +1,7 @@
 import { Ranking } from '@/types/chase/ranking';
 import { supabase } from './client'
 import { format } from 'date-fns-tz';
-import { Achievement as DBAchievement } from '@/types/chase';
+import { Achievement as DBAchievement, Schedule as DBSchedule } from '@/types/chase';
 
 interface FetchUsersParams {
   players: string[]
@@ -89,3 +89,21 @@ export const upsertAchievements = async (achievements: Achievement[]) => {
 
   return;
 }
+
+export type Schedule = Omit<DBSchedule, 'id' | 'created_at'>
+export const insertSchedules = async (schedule: Schedule[]) => {
+  const { data: scheduleData, error: selectError } = await supabase.from('schedule').select('*').order('started_at');
+  if (selectError) {
+    console.error(selectError);
+    return null;
+  }
+
+  const targets = schedule.filter(s => !scheduleData.some(d => d.started_at === s.started_at!.replace(' ', 'T') && d.ended_at! === s.ended_at!.replace(' ', 'T')))
+
+  const { error: insertError } = await supabase.from('schedule').insert(targets);
+  if (insertError) {
+    console.error(insertError);
+    return null;
+  }
+}
+

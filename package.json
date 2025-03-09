@@ -1,6 +1,6 @@
 {
   "name": "choco",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Prototype with TypeScript in Liere",
   "main": "index.js",
   "scripts": {
@@ -48,6 +48,7 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.7",
+    "git-cz": "^4.9.0",
     "esbuild": "^0.25.0",
     "prettier": "^3.4.2",
     "supabase": "^2.0.0"
