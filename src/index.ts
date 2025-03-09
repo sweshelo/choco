@@ -1,5 +1,6 @@
 import ranking from "./modules/ranking";
 import analyze from "./modules/records";
+import { schedule } from "./modules/schedule";
 
 const fetchRankingWithLogging = () => {
   const start = new Date();
@@ -39,6 +40,23 @@ const analyzeWithLogging = () => {
   };
 }
 
+const fetchScheduleWithLogging = () => {
+  const start = new Date();
+
+  try {
+    console.info('> Schedule Fetch START @ %s', new Date().toUTCString());
+    schedule().then(() => {
+      console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
+      console.info('=== Completed ===\n')
+    })
+  } catch (e) {
+    console.error('❌ Schedule fetch failed at: %s', new Date().toISOString());
+    console.error('Error details:', e instanceof Error ? e.message : e);
+    console.error('Stack trace:', e instanceof Error ? e.stack : 'No stack trace available');
+    console.info('\n')
+  }
+}
+
 export default function main() {
   console.log('HELL WORD 👹');
   console.log('CHOCO STARTED');
@@ -46,6 +64,7 @@ export default function main() {
   analyzeWithLogging();
   setInterval(fetchRankingWithLogging, 1000 * 400);
   setInterval(analyzeWithLogging, 1000 * 60 * 60 * 12);
+  setInterval(fetchScheduleWithLogging, 1000 * 60 * 60 * 24 * 7);
 }
 
 main();
