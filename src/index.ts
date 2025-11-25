@@ -63,23 +63,25 @@ const fetchScheduleWithLogging = (supabase: SupabaseClient) => {
 const main = async (env: Env) => {
   const supabase = getSupabaseClient(env);
   const DEFAULT_DATE = "2000/01/01 00:00:00";
-  const daily = await env.CF_KV?.get('lastrun_daily');
-  const weekly = await env.CF_KV?.get('lastrun_weekly');
-
-  // 3分おき
-  await fetchRankingWithLogging(supabase);
-
-  // 12時間おき
-  if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 12) {
-    await analyzeWithLogging(supabase);
-    await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
-  }
 
   // 7日おき
+  const weekly = await env.CF_KV?.get('lastrun_weekly');
   if (differenceInDays(new Date(), new Date(weekly || DEFAULT_DATE)) >= 7) {
     await fetchScheduleWithLogging(supabase);
     await env.CF_KV?.put('lastrun_weekly', new Date().toISOString())
+    return
   }
+
+  // 12時間おき
+  const daily = await env.CF_KV?.get('lastrun_daily');
+  if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 12) {
+    await analyzeWithLogging(supabase);
+    await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
+    return
+  }
+
+  // 3分おき
+  await fetchRankingWithLogging(supabase);
 }
 
 export default {
