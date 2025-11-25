@@ -1,6 +1,5 @@
 import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
-import { fromZonedTime } from 'date-fns-tz';
 import { Ranking } from '@/types/chase/ranking';
 import { Achievement, fetchAnons, fetchUsers, insertRecords, upsertAchievements } from '../subabase/module';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -20,10 +19,17 @@ export default async function ranking(supabase: SupabaseClient<Database>) {
         const html = await (await fetch(originalPageURL(index))).text();
         const $ = cheerio.load(html);
         const dateStr = $('.hr0').eq(1).next().text().trim().replace('最終更新:', '');
-        // Parse the date string as Japan time and convert to UTC
+        // Parse the date string and preserve the time values as-is
         // The string is in format "yyyy.MM.dd HH:mm" and represents Japan time
         const parsedDate = parse(dateStr, 'yyyy.MM.dd HH:mm', new Date());
-        const recordedAt = fromZonedTime(parsedDate, 'Asia/Tokyo');
+        // Create a Date object with the parsed values (no timezone conversion)
+        const recordedAt = new Date(
+          parsedDate.getFullYear(),
+          parsedDate.getMonth(),
+          parsedDate.getDate(),
+          parsedDate.getHours(),
+          parsedDate.getMinutes()
+        );
 
         $('#ranking_data')
           .find('li')

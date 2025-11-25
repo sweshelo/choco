@@ -1,5 +1,5 @@
 import { Ranking } from '@/types/chase/ranking';
-import { format } from 'date-fns-tz';
+import { format } from 'date-fns';
 import { Achievement as DBAchievement, Schedule as DBSchedule } from '@/types/chase';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/schema';
@@ -53,7 +53,7 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
     diff: record.points.diff,
     ranking: record.rank,
     achievement: record.achievement.title,
-    recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", { timeZone: 'Asia/Tokyo' }),
+    recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSS"),
     elapsed: record.elapsed,
   }))
 
