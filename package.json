@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "schema:update": "supabase gen types typescript --linked > src/types/schema.ts",
-    "build": "node build.js",
-    "dev": "ts-node src/index.ts",
-    "start": "node dist/index.js",
+    "dev": "bunx wrangler dev --test-scheduled",
     "prepare": "husky",
     "knip": "knip"
   },
