@@ -5,6 +5,8 @@ import { schedule } from "./modules/schedule";
 import { Env, getSupabaseClient } from "./modules/subabase/client";
 import { differenceInDays, differenceInHours } from "date-fns";
 
+const DEFAULT_DATE = "2000-01-01T00:00:00Z";
+
 const fetchRankingWithLogging = async (supabase: SupabaseClient) => {
   const start = new Date();
 
@@ -60,10 +62,9 @@ const fetchScheduleWithLogging = async (supabase: SupabaseClient) => {
 
 const main = async (env: Env) => {
   const supabase = getSupabaseClient(env);
-  const DEFAULT_DATE = "2000/01/01 00:00:00";
 
-  if(!env.CF_KV){
-    console.error('CF_KV not found!')
+  if (!env.CF_KV) {
+    console.warn('CF_KV not found!')
     await fetchRankingWithLogging(supabase);
     return
   }
@@ -72,7 +73,7 @@ const main = async (env: Env) => {
   const weekly = await env.CF_KV.get('lastrun_weekly');
   if (differenceInDays(new Date(), new Date(weekly || DEFAULT_DATE)) >= 7) {
     await fetchScheduleWithLogging(supabase);
-    await env.CF_KV?.put('lastrun_weekly', new Date().toISOString())
+    await env.CF_KV.put('lastrun_weekly', new Date().toISOString())
     return
   }
 
@@ -80,18 +81,21 @@ const main = async (env: Env) => {
   const daily = await env.CF_KV.get('lastrun_daily');
   if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 12) {
     await analyzeWithLogging(supabase);
-    await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
+    await env.CF_KV.put('lastrun_daily', new Date().toISOString())
     return
   }
 
-  // 3分おき
+  // デフォルト3分おき (Wranglerのcron設定に依存)
   await fetchRankingWithLogging(supabase);
 }
 
 export default {
-   
+
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(main(env));
+    ctx.waitUntil(main(env).catch(err => {
+      console.error('`scheduled() failed: ', err);
+      console.error((err instanceof Error ? err.stack : undefined) ?? 'No stack trace available')
+    }));
   },
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -99,8 +103,8 @@ export default {
     return new Response(`
         Hello, this is choco, worker of Enma-V2!
 
-        LastAnalyzed: ${await env.CF_KV?.get('lastrun_daily')}
-        LastScheduleFetched: ${await env.CF_KV?.get('lastrun_weekly')}
+        LastAnalyzed: ${await env.CF_KV?.get('lastrun_daily') ?? 'N/A'}
+        LastScheduleFetched: ${await env.CF_KV?.get('lastrun_weekly') ?? 'N/A'}
     `)
   }
 }
