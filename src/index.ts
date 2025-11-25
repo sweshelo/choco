@@ -1,8 +1,11 @@
+import { SupabaseClient } from "@supabase/supabase-js";
 import ranking from "./modules/ranking";
 import analyze from "./modules/records";
 import { schedule } from "./modules/schedule";
+import { Env, getSupabaseClient } from "./modules/subabase/client";
+import { differenceInDays, differenceInHours } from "date-fns";
 
-const fetchRankingWithLogging = () => {
+const fetchRankingWithLogging = (supabase: SupabaseClient) => {
   const start = new Date();
 
   // 深夜～早朝は実行しない
@@ -11,7 +14,7 @@ const fetchRankingWithLogging = () => {
 
   try {
     console.info('> Session START @ %s', start.toUTCString());
-    ranking().then(() => {
+    return ranking(supabase).then(() => {
       console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
       console.info('=== Completed ===\n')
     });
@@ -23,12 +26,12 @@ const fetchRankingWithLogging = () => {
   };
 }
 
-const analyzeWithLogging = () => {
+const analyzeWithLogging = (supabase: SupabaseClient) => {
   const start = new Date();
 
   try {
     console.info('> Analyze START @ %s', start.toUTCString());
-    analyze().then(() => {
+    return analyze(supabase).then(() => {
       console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
       console.info('=== Completed ===\n')
     });
@@ -40,12 +43,12 @@ const analyzeWithLogging = () => {
   };
 }
 
-const fetchScheduleWithLogging = () => {
+const fetchScheduleWithLogging = (supabase: SupabaseClient) => {
   const start = new Date();
 
   try {
     console.info('> Schedule Fetch START @ %s', new Date().toUTCString());
-    schedule().then(() => {
+    return schedule(supabase).then(() => {
       console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
       console.info('=== Completed ===\n')
     })
@@ -57,14 +60,32 @@ const fetchScheduleWithLogging = () => {
   }
 }
 
-export default function main() {
-  console.log('HELL WORD 👹');
-  console.log('CHOCO STARTED');
-  fetchRankingWithLogging();
-  analyzeWithLogging();
-  setInterval(fetchRankingWithLogging, 1000 * 240);
-  setInterval(analyzeWithLogging, 1000 * 60 * 60 * 12);
-  setInterval(fetchScheduleWithLogging, 1000 * 60 * 60 * 24 * 7);
-}
+export default {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    const supabase = getSupabaseClient(env);
+    const DEFAULT_DATE = "2000/01/01 00:00:00";
+    const daily = new Date(await env.CF_KV?.get('lastrun_daily') || DEFAULT_DATE);
+    const weekly = new Date(await env.CF_KV?.get('lastrun_weekly') || DEFAULT_DATE);
 
-main();
+    // 3分おき
+    await fetchRankingWithLogging(supabase);
+
+    // 12時間おき
+    if (differenceInHours(new Date(), daily) >= 12) {
+      await analyzeWithLogging(supabase);
+      await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
+    }
+
+    // 7日おき
+    if (differenceInDays(new Date(), weekly) >= 7) {
+      await fetchScheduleWithLogging(supabase);
+      await env.CF_KV?.put('lastrun_weekly', new Date().toISOString())
+    }
+  },
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    return new Response("Hello, this is choco, worker of Enma-V2!")
+  }
+}
