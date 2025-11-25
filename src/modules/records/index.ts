@@ -1,5 +1,7 @@
 import { Record } from "@/types/chase";
 import { getAllSeasonRecord, upsertPlayer } from "../subabase/modules/analyze";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "@/types/schema";
 
 type ValidRecord = Omit<Record, 'diff' | 'elapsed'> & {
   diff: number;
@@ -10,9 +12,9 @@ function isValidRecord(record: Record): record is ValidRecord {
   return record.diff !== null && record.elapsed !== null && record.elapsed < 600;
 }
 
-export default async function analyze() {
+export default async function analyze(supabase: SupabaseClient<Database>) {
 
-  const records = await getAllSeasonRecord();
+  const records = await getAllSeasonRecord(supabase);
   if (!records) return;
 
   // プレイヤーごとに記録をグループ化
@@ -38,15 +40,17 @@ export default async function analyze() {
 
   // 各プレイヤーの average と effective_average を算出
   Object.keys(playerRecords).forEach(playerName => {
-    const recs = playerRecords[playerName].filter(isValidRecord).sort((a, b) => {
+    const recs = playerRecords[playerName]?.filter(isValidRecord).sort((a, b) => {
       return new Date(b.recorded_at ?? '').getTime() - new Date(a.recorded_at ?? '').getTime();
     });
+
+    if (!recs) return;
 
     const [last] = recs;
     const threshould = 1000 * 60 * 60 * 24 * 50; // 50日
 
     // 記録が5件以下か、最終プレイから50日経過している場合は偏差値算出対象外にする
-    if((new Date()).getTime() - (new Date(last.recorded_at ?? '')).getTime() > threshould || recs.length <= 5) return;
+    if ((new Date()).getTime() - (new Date(last?.recorded_at ?? '')).getTime() > threshould || recs.length <= 5) return;
 
     const count = recs.length;
     // 平均点 (diff の平均)
@@ -84,10 +88,12 @@ export default async function analyze() {
   // 各プレイヤーの average の偏差値を算出
   // （標準的な偏差値の計算式：50 + 10 * (score - mean) / stdDeviation）
   Object.keys(playerStats).forEach(playerName => {
-    if (stdDeviation === 0) {
-      playerStats[playerName].deviation = 50;
-    } else {
-      playerStats[playerName].deviation = 50 + 10 * ((playerStats[playerName].average - overallAverage) / stdDeviation);
+    if (playerStats[playerName]) {
+      if (stdDeviation === 0) {
+        playerStats[playerName].deviation = 50;
+      } else {
+        playerStats[playerName].deviation = 50 + 10 * ((playerStats[playerName].average - overallAverage) / stdDeviation);
+      }
     }
   });
 
@@ -98,5 +104,5 @@ export default async function analyze() {
     deviation_value: Number.isNaN(stats.deviation) ? null : stats.deviation ?? null,
   }))
 
-  await upsertPlayer(players);
+  await upsertPlayer(supabase, players);
 }

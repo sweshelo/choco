@@ -1,13 +1,14 @@
 import { Ranking } from '@/types/chase/ranking';
-import { supabase } from './client'
-import { format } from 'date-fns-tz';
+import { format } from 'date-fns';
 import { Achievement as DBAchievement, Schedule as DBSchedule } from '@/types/chase';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/schema';
 
 interface FetchUsersParams {
   players: string[]
 }
 
-export const fetchUserLatestRecords = async ({ players }: FetchUsersParams) => {
+export const fetchUserLatestRecords = async (supabase: SupabaseClient<Database>, { players }: FetchUsersParams) => {
   const { data, error } = await supabase
     .rpc('get_records_by_player_names', { player_names: players });
 
@@ -19,7 +20,7 @@ export const fetchUserLatestRecords = async ({ players }: FetchUsersParams) => {
   return data;
 }
 
-export const fetchUsers = async ({ players }: FetchUsersParams) => {
+export const fetchUsers = async (supabase: SupabaseClient<Database>, { players }: FetchUsersParams) => {
   const { data, error } = await supabase.from('player').select('*').in('name', players)
   if (error) {
     console.error(error)
@@ -28,7 +29,7 @@ export const fetchUsers = async ({ players }: FetchUsersParams) => {
   return data;
 }
 
-export const fetchAnons = async () => {
+export const fetchAnons = async (supabase: SupabaseClient<Database>) => {
   const { data, error } = await supabase
     .from('record')
     .select('*')
@@ -44,7 +45,7 @@ export const fetchAnons = async () => {
   return data;
 }
 
-export const insertRecords = async (_records: Ranking[]) => {
+export const insertRecords = async (supabase: SupabaseClient<Database>, _records: Ranking[]) => {
   const records = _records.map(record => ({
     player_name: record.name,
     chara: record.chara,
@@ -52,7 +53,7 @@ export const insertRecords = async (_records: Ranking[]) => {
     diff: record.points.diff,
     ranking: record.rank,
     achievement: record.achievement.title,
-    recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSSXXX", { timeZone: 'Asia/Tokyo' }),
+    recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSS"),
     elapsed: record.elapsed,
   }))
 
@@ -83,7 +84,7 @@ export const insertRecords = async (_records: Ranking[]) => {
 }
 
 export type Achievement = Omit<DBAchievement, 'created_at' | 'id'>
-export const upsertAchievements = async (achievements: Achievement[]) => {
+export const upsertAchievements = async (supabase: SupabaseClient<Database>, achievements: Achievement[]) => {
   const { error } = await supabase.from('achievement').upsert(achievements, { onConflict: 'title' })
   if (error) console.error(error);
 
@@ -91,14 +92,14 @@ export const upsertAchievements = async (achievements: Achievement[]) => {
 }
 
 export type Schedule = Omit<DBSchedule, 'id' | 'created_at'>
-export const insertSchedules = async (schedule: Schedule[]) => {
+export const insertSchedules = async (supabase: SupabaseClient<Database>, schedule: Schedule[]) => {
   const { data: scheduleData, error: selectError } = await supabase.from('schedule').select('*').order('started_at');
   if (selectError) {
     console.error(selectError);
     return null;
   }
 
-  const targets = schedule.filter(s => !scheduleData.some(d => d.started_at === s.started_at!.replace(' ', 'T') && d.ended_at! === s.ended_at!.replace(' ', 'T')))
+  const targets = schedule.filter(s => !scheduleData.some((d) => d.started_at === s.started_at?.replace(' ', 'T') && d.ended_at === s.ended_at?.replace(' ', 'T')))
 
   const { error: insertError } = await supabase.from('schedule').insert(targets);
   if (insertError) {
@@ -106,4 +107,3 @@ export const insertSchedules = async (schedule: Schedule[]) => {
     return null;
   }
 }
-

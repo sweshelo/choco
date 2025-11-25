@@ -1,2 +1,2 @@
-npx lint-staged
-npx knip || true
+bunx lint-staged
+bunx knip || true

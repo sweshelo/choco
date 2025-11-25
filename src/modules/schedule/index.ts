@@ -1,14 +1,16 @@
 import * as cheerio from 'cheerio';
 import { Schedule } from '../subabase/module';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/schema';
 
 const parseDateString = (str: string) => {
   // 「(火)」など括弧内の曜日を削除
   const cleaned = str.replace(/\(.*?\)/, '');
   // 「7/11 10:00」などの形に
   const [datePart, timePart] = cleaned.trim().split(' ');
-  const [month, day] = datePart.split('/').map(Number);
-  const [hour, minute] = timePart.split(':').map(Number);
-  return { month, day, hour, minute };
+  const [month, day] = datePart?.split('/').map(Number) ?? [0, 0];
+  const [hour, minute] = timePart?.split(':').map(Number) ?? [0, 0];
+  return { month: month ?? 0, day: day ?? 0, hour: hour ?? 0, minute: minute ?? 0 };
 }
 
 // スケジュール配列を処理する関数
@@ -55,8 +57,8 @@ const processEvents = (events: Schedule[], initialYear = 2023) => {
   });
 }
 
-
-export const schedule = async (): Promise<Schedule[]> => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const schedule = async (supabase: SupabaseClient<Database>): Promise<Schedule[]> => {
   const response = await fetch('https://p.eagate.573.jp/game/chase2jokers/ccj/news/index.html');
   const html = await response.text();
   const $ = cheerio.load(html);
@@ -73,8 +75,8 @@ export const schedule = async (): Promise<Schedule[]> => {
       return dataRows.map(row => {
         const cells = $(row).find('td').toArray();
         const [date, even_time, odd_time] = cells.map(cell => $(cell).text().trim());
-        const [started_at, ended_at] = date.split(' - ');
-        return { started_at, ended_at, even_time, odd_time };
+        const [started_at, ended_at] = date?.split(' - ') ?? [];
+        return { started_at: started_at ?? null, ended_at: ended_at ?? null, even_time: even_time ?? null, odd_time: odd_time ?? null };
       }).reverse();
     })
     .get()  // Cheerioオブジェクトから通常の配列に変換

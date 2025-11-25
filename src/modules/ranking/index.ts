@@ -2,14 +2,15 @@ import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
 import { Achievement, fetchAnons, fetchUsers, insertRecords, upsertAchievements } from '../subabase/module';
-import { toZonedTime } from 'date-fns-tz';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/schema';
 
 const originalPageURL = (index: number) => {
   const month = format(new Date(), 'yyyyMM');
   return `https://p.eagate.573.jp/game/chase2jokers/ccj/ranking/index.html?page=${index}&rid=${month}`;
 };
 
-export default async function ranking() {
+export default async function ranking(supabase: SupabaseClient<Database>) {
   const ranking: Ranking[] = [];
 
   await Promise.all(
@@ -17,7 +18,18 @@ export default async function ranking() {
       try {
         const html = await (await fetch(originalPageURL(index))).text();
         const $ = cheerio.load(html);
-        const recordedAt = toZonedTime(parse($('.hr0').eq(1).next().text().trim().replace('最終更新:', ''), 'yyyy.MM.dd HH:mm', new Date()), 'Asia/Tokyo');
+        const dateStr = $('.hr0').eq(1).next().text().trim().replace('最終更新:', '');
+        // Parse the date string and preserve the time values as-is
+        // The string is in format "yyyy.MM.dd HH:mm" and represents Japan time
+        const parsedDate = parse(dateStr, 'yyyy.MM.dd HH:mm', new Date());
+        // Create a Date object with the parsed values (no timezone conversion)
+        const recordedAt = new Date(
+          parsedDate.getFullYear(),
+          parsedDate.getMonth(),
+          parsedDate.getDate(),
+          parsedDate.getHours(),
+          parsedDate.getMinutes()
+        );
 
         $('#ranking_data')
           .find('li')
@@ -33,7 +45,7 @@ export default async function ranking() {
               .find('img')
               .attr('src')
               ?.match(/icon_(\d+)/);
-            const chara = charaMatch ? charaMatch[1] : '0';
+            const chara = (charaMatch ? charaMatch[1] : '0') || '0';
             const name = $(element)
               .find('div')
               .eq(1)
@@ -96,8 +108,8 @@ export default async function ranking() {
   );
 
   const players = ranking.map(({ name }) => name).filter(name => name !== 'プレーヤー');
-  const users = await fetchUsers({ players })
-  const anons = await fetchAnons();
+  const users = await fetchUsers(supabase, { players })
+  const anons = await fetchAnons(supabase);
 
   ranking.forEach((rank) => {
     const player = users?.find(player => player?.name === rank.name);
@@ -107,11 +119,11 @@ export default async function ranking() {
     }
   });
 
-  await insertRecords(ranking.filter(record => {
+  await insertRecords(supabase, ranking.filter(record => {
     return !(record.name === 'プレーヤー' && anons.some(anon => anon.point === record.points.current && anon.ranking === record.rank))
   }));
 
-  await upsertAchievements(ranking.map<Achievement>(record => ({
+  await upsertAchievements(supabase, ranking.map<Achievement>(record => ({
     title: record.achievement.title,
     markup: record.achievement.markup ?? null,
     icon_first: record.achievement.icon.first ?? null,

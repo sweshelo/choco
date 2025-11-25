@@ -1,13 +1,11 @@
 {
   "name": "choco",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Prototype with TypeScript in Liere",
   "main": "index.js",
   "scripts": {
     "schema:update": "supabase gen types typescript --linked > src/types/schema.ts",
-    "build": "node build.js",
-    "dev": "ts-node src/index.ts",
-    "start": "node dist/index.js",
+    "dev": "bunx wrangler dev --test-scheduled",
     "prepare": "husky",
     "knip": "knip"
   },
@@ -26,6 +24,7 @@
   },
   "homepage": "https://github.com/sweshelo/choco#readme",
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251121.0",
     "@eslint/js": "^9.16.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.13.1",
@@ -40,7 +39,8 @@
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.18.0"
+    "typescript-eslint": "^8.18.0",
+    "wrangler": "^4.50.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
@@ -48,8 +48,8 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "dotenv": "^16.4.7",
-    "git-cz": "^4.9.0",
     "esbuild": "^0.25.0",
+    "git-cz": "^4.9.0",
     "prettier": "^3.4.2",
     "supabase": "^2.0.0"
   }

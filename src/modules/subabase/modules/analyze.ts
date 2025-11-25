@@ -1,7 +1,8 @@
 import { Record } from "@/types/chase"
-import { supabase } from "../client"
+import { Database } from "@/types/schema"
+import { SupabaseClient } from "@supabase/supabase-js"
 
-export const getAllSeasonRecord = async () => {
+export const getAllSeasonRecord = async (supabase: SupabaseClient<Database>) => {
   // 最新シーズンを取得
   const { data: seasons, error: seasonError } = await supabase
     .from('season')
@@ -38,12 +39,12 @@ export const getAllSeasonRecord = async () => {
       .from('record')
       .select('*')
       .neq('player_name', 'プレーヤー')
-      .gte('recorded_at', season.started_at)
+      .gte('recorded_at', season?.started_at)
       .lt('elapsed', 600)
       .lt('diff', 500)
       .range(offset, offset + pageSize - 1); // オフセットと上限を指定
 
-    if (season.ended_at) {
+    if (season?.ended_at) {
       query = query.lte('recorded_at', season.ended_at);
     }
 
@@ -79,7 +80,7 @@ interface Props {
   effective_average: number | null;
   deviation_value: number | null;
 }
-export const upsertPlayer = async (players: Props[]) => {
+export const upsertPlayer = async (supabase: SupabaseClient<Database>, players: Props[]) => {
   const { error } = await supabase.from('player').upsert(players, { onConflict: 'name' })
   if (error) console.error(error)
 }
