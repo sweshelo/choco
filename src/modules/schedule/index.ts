@@ -1,5 +1,7 @@
 import * as cheerio from 'cheerio';
 import { Schedule } from '../subabase/module';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/schema';
 
 const parseDateString = (str: string) => {
   // 「(火)」など括弧内の曜日を削除
@@ -55,8 +57,8 @@ const processEvents = (events: Schedule[], initialYear = 2023) => {
   });
 }
 
-
-export const schedule = async (): Promise<Schedule[]> => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const schedule = async (supabase: SupabaseClient<Database>): Promise<Schedule[]> => {
   const response = await fetch('https://p.eagate.573.jp/game/chase2jokers/ccj/news/index.html');
   const html = await response.text();
   const $ = cheerio.load(html);

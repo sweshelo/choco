@@ -3,13 +3,15 @@ import { format, parse } from 'date-fns';
 import { Ranking } from '@/types/chase/ranking';
 import { Achievement, fetchAnons, fetchUsers, insertRecords, upsertAchievements } from '../subabase/module';
 import { toZonedTime } from 'date-fns-tz';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Database } from '@/types/schema';
 
 const originalPageURL = (index: number) => {
   const month = format(new Date(), 'yyyyMM');
   return `https://p.eagate.573.jp/game/chase2jokers/ccj/ranking/index.html?page=${index}&rid=${month}`;
 };
 
-export default async function ranking() {
+export default async function ranking(supabase: SupabaseClient<Database>) {
   const ranking: Ranking[] = [];
 
   await Promise.all(
@@ -96,8 +98,8 @@ export default async function ranking() {
   );
 
   const players = ranking.map(({ name }) => name).filter(name => name !== 'プレーヤー');
-  const users = await fetchUsers({ players })
-  const anons = await fetchAnons();
+  const users = await fetchUsers(supabase, { players })
+  const anons = await fetchAnons(supabase);
 
   ranking.forEach((rank) => {
     const player = users?.find(player => player?.name === rank.name);
@@ -107,11 +109,11 @@ export default async function ranking() {
     }
   });
 
-  await insertRecords(ranking.filter(record => {
+  await insertRecords(supabase, ranking.filter(record => {
     return !(record.name === 'プレーヤー' && anons.some(anon => anon.point === record.points.current && anon.ranking === record.rank))
   }));
 
-  await upsertAchievements(ranking.map<Achievement>(record => ({
+  await upsertAchievements(supabase, ranking.map<Achievement>(record => ({
     title: record.achievement.title,
     markup: record.achievement.markup ?? null,
     icon_first: record.achievement.icon.first ?? null,

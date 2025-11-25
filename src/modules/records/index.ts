@@ -1,5 +1,7 @@
 import { Record } from "@/types/chase";
 import { getAllSeasonRecord, upsertPlayer } from "../subabase/modules/analyze";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "@/types/schema";
 
 type ValidRecord = Omit<Record, 'diff' | 'elapsed'> & {
   diff: number;
@@ -10,9 +12,9 @@ function isValidRecord(record: Record): record is ValidRecord {
   return record.diff !== null && record.elapsed !== null && record.elapsed < 600;
 }
 
-export default async function analyze() {
+export default async function analyze(supabase: SupabaseClient<Database>) {
 
-  const records = await getAllSeasonRecord();
+  const records = await getAllSeasonRecord(supabase);
   if (!records) return;
 
   // プレイヤーごとに記録をグループ化
@@ -98,5 +100,5 @@ export default async function analyze() {
     deviation_value: Number.isNaN(stats.deviation) ? null : stats.deviation ?? null,
   }))
 
-  await upsertPlayer(players);
+  await upsertPlayer(supabase, players);
 }
