@@ -83,9 +83,9 @@ const main = async (env: Env) => {
 }
 
 export default {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    await main(env);
+    ctx.waitUntil(main(env));
   },
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
