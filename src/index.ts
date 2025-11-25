@@ -62,8 +62,14 @@ const main = async (env: Env) => {
   const supabase = getSupabaseClient(env);
   const DEFAULT_DATE = "2000/01/01 00:00:00";
 
+  if(!env.CF_KV){
+    console.error('CF_KV not found!')
+    await fetchRankingWithLogging(supabase);
+    return
+  }
+
   // 7日おき
-  const weekly = await env.CF_KV?.get('lastrun_weekly');
+  const weekly = await env.CF_KV.get('lastrun_weekly');
   if (differenceInDays(new Date(), new Date(weekly || DEFAULT_DATE)) >= 7) {
     await fetchScheduleWithLogging(supabase);
     await env.CF_KV?.put('lastrun_weekly', new Date().toISOString())
@@ -71,7 +77,7 @@ const main = async (env: Env) => {
   }
 
   // 12時間おき
-  const daily = await env.CF_KV?.get('lastrun_daily');
+  const daily = await env.CF_KV.get('lastrun_daily');
   if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 12) {
     await analyzeWithLogging(supabase);
     await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
