@@ -90,6 +90,11 @@ export default {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    return new Response("Hello, this is choco, worker of Enma-V2!")
+    return new Response(`
+        Hello, this is choco, worker of Enma-V2!
+
+        LastAnalyzed: ${await env.CF_KV?.get('lastrun_daily')}
+        LastScheduleFetched: ${await env.CF_KV?.get('lastrun_weekly')}
+    `)
   }
 }
