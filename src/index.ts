@@ -10,15 +10,16 @@ const fetchRankingWithLogging = async (supabase: SupabaseClient) => {
 
   // 深夜～早朝は実行しない
   const hour = (start.getUTCHours() + 9) % 24
+  console.info("current time: ", hour)
   if (hour >= 1 && hour <= 5) return;
 
   try {
-    console.info('> Session START @ %s', start.toUTCString());
+    console.info(`> Session START @ ${start.toUTCString()}`);
     await ranking(supabase)
-    console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
+    console.info(`Duration: ${(new Date().getTime() - start.getTime()) / 1000}sec.`)
     console.info('=== Completed ===\n')
   } catch (e) {
-    console.error('❌ Ranking fetch failed at: %s', new Date().toISOString());
+    console.error(`❌ Ranking fetch failed at: ${new Date().toISOString()}`);
     console.error('Error details:', e instanceof Error ? e.message : e);
     console.error('Stack trace:', e instanceof Error ? e.stack : 'No stack trace available');
     console.info('\n')
@@ -29,12 +30,12 @@ const analyzeWithLogging = async (supabase: SupabaseClient) => {
   const start = new Date();
 
   try {
-    console.info('> Analyze START @ %s', start.toUTCString());
+    console.info(`> Analyze START @ ${start.toUTCString()}`);
     await analyze(supabase)
-    console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
+    console.info(`Duration: ${(new Date().getTime() - start.getTime()) / 1000}sec.`)
     console.info('=== Completed ===\n')
   } catch (e) {
-    console.error('❌ Analyze failed at: %s', new Date().toISOString());
+    console.error(`❌ Analyze failed at: ${new Date().toISOString()}`);
     console.error('Error details:', e instanceof Error ? e.message : e);
     console.error('Stack trace:', e instanceof Error ? e.stack : 'No stack trace available');
     console.info('\n')
@@ -45,12 +46,12 @@ const fetchScheduleWithLogging = async (supabase: SupabaseClient) => {
   const start = new Date();
 
   try {
-    console.info('> Schedule Fetch START @ %s', new Date().toUTCString());
+    console.info(`> Schedule Fetch START @ ${new Date().toUTCString()}`);
     await schedule(supabase)
-    console.info('Duration: %dsec.', (new Date().getTime() - start.getTime()) / 1000)
+    console.info(`Duration: ${(new Date().getTime() - start.getTime()) / 1000}sec.`)
     console.info('=== Completed ===\n')
   } catch (e) {
-    console.error('❌ Schedule fetch failed at: %s', new Date().toISOString());
+    console.error(`❌ Schedule fetch failed at: ${new Date().toISOString()}`);
     console.error('Error details:', e instanceof Error ? e.message : e);
     console.error('Stack trace:', e instanceof Error ? e.stack : 'No stack trace available');
     console.info('\n')
