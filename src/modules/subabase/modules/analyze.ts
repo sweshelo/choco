@@ -39,12 +39,12 @@ export const getAllSeasonRecord = async (supabase: SupabaseClient<Database>) => 
       .from('record')
       .select('*')
       .neq('player_name', 'プレーヤー')
-      .gte('recorded_at', season.started_at)
+      .gte('recorded_at', season?.started_at)
       .lt('elapsed', 600)
       .lt('diff', 500)
       .range(offset, offset + pageSize - 1); // オフセットと上限を指定
 
-    if (season.ended_at) {
+    if (season?.ended_at) {
       query = query.lte('recorded_at', season.ended_at);
     }
 

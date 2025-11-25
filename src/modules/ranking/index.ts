@@ -45,7 +45,7 @@ export default async function ranking(supabase: SupabaseClient<Database>) {
               .find('img')
               .attr('src')
               ?.match(/icon_(\d+)/);
-            const chara = charaMatch ? charaMatch[1] : '0';
+            const chara = (charaMatch ? charaMatch[1] : '0') || '0';
             const name = $(element)
               .find('div')
               .eq(1)
