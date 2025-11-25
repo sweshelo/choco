@@ -60,28 +60,32 @@ const fetchScheduleWithLogging = (supabase: SupabaseClient) => {
   }
 }
 
+const main = async (env: Env) => {
+  const supabase = getSupabaseClient(env);
+  const DEFAULT_DATE = "2000/01/01 00:00:00";
+  const daily = await env.CF_KV?.get('lastrun_daily');
+  const weekly = await env.CF_KV?.get('lastrun_weekly');
+
+  // 3分おき
+  await fetchRankingWithLogging(supabase);
+
+  // 12時間おき
+  if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 12) {
+    await analyzeWithLogging(supabase);
+    await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
+  }
+
+  // 7日おき
+  if (differenceInDays(new Date(), new Date(weekly || DEFAULT_DATE)) >= 7) {
+    await fetchScheduleWithLogging(supabase);
+    await env.CF_KV?.put('lastrun_weekly', new Date().toISOString())
+  }
+}
+
 export default {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    const supabase = getSupabaseClient(env);
-    const DEFAULT_DATE = "2000/01/01 00:00:00";
-    const daily = new Date(await env.CF_KV?.get('lastrun_daily') || DEFAULT_DATE);
-    const weekly = new Date(await env.CF_KV?.get('lastrun_weekly') || DEFAULT_DATE);
-
-    // 3分おき
-    await fetchRankingWithLogging(supabase);
-
-    // 12時間おき
-    if (differenceInHours(new Date(), daily) >= 12) {
-      await analyzeWithLogging(supabase);
-      await env.CF_KV?.put('lastrun_daily', new Date().toISOString())
-    }
-
-    // 7日おき
-    if (differenceInDays(new Date(), weekly) >= 7) {
-      await fetchScheduleWithLogging(supabase);
-      await env.CF_KV?.put('lastrun_weekly', new Date().toISOString())
-    }
+    await main(env);
   },
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
