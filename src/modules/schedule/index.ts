@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { Schedule } from '../subabase/module';
+import { Schedule, insertSchedules } from '../subabase/module';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/schema';
 
@@ -57,7 +57,6 @@ const processEvents = (events: Schedule[], initialYear = 2023) => {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const schedule = async (supabase: SupabaseClient<Database>): Promise<Schedule[]> => {
   const response = await fetch('https://p.eagate.573.jp/game/chase2jokers/ccj/news/index.html');
   const html = await response.text();
@@ -83,5 +82,10 @@ export const schedule = async (supabase: SupabaseClient<Database>): Promise<Sche
     .flat() // 配列の配列をフラット化
     .reverse(); // 全体を逆順に
 
-  return processEvents(events);
+  const processedSchedule = processEvents(events);
+  
+  // データベースに保存
+  await insertSchedules(supabase, processedSchedule);
+  
+  return processedSchedule;
 };
