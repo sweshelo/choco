@@ -93,17 +93,43 @@ export const upsertAchievements = async (supabase: SupabaseClient<Database>, ach
 
 export type Schedule = Omit<DBSchedule, 'id' | 'created_at'>
 export const insertSchedules = async (supabase: SupabaseClient<Database>, schedule: Schedule[]) => {
-  const { data: scheduleData, error: selectError } = await supabase.from('schedule').select('*').order('started_at');
+  // 最新の1件のみ取得（データがない場合はnull）
+  const { data: latestSchedule, error: selectError } = await supabase
+    .from('schedule')
+    .select('started_at')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   if (selectError) {
     console.error(selectError);
     return null;
   }
 
-  const targets = schedule.filter(s => !scheduleData.some((d) => d.started_at === s.started_at?.replace(' ', 'T') && d.ended_at === s.ended_at?.replace(' ', 'T')))
+  console.log(latestSchedule?.started_at);
+
+  // 最新データより新しいもののみフィルタリング
+  // Date型に変換して数値比較を行う
+  const targets = schedule.filter(s => {
+    if (!s.started_at) return false;
+    if (!latestSchedule || !latestSchedule.started_at) return true;
+
+    // Date型に変換して数値として比較
+    const scrapedDate = new Date(s.started_at);
+    const latestDate = new Date(latestSchedule.started_at);
+    return scrapedDate.getTime() > latestDate.getTime();
+  });
+
+  if (targets.length === 0) {
+    console.info('No new schedules to insert');
+    return;
+  }
 
   const { error: insertError } = await supabase.from('schedule').insert(targets);
   if (insertError) {
     console.error(insertError);
     return null;
   }
+
+  console.info(`Inserted ${targets.length} new schedule(s)`);
 }

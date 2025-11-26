@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { format, parse } from 'date-fns';
+import { fromZonedTime } from 'date-fns-tz';
 import { Ranking } from '@/types/chase/ranking';
 import { Achievement, fetchAnons, fetchUsers, insertRecords, upsertAchievements } from '../subabase/module';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -115,7 +116,10 @@ export default async function ranking(supabase: SupabaseClient<Database>) {
     const player = users?.find(player => player?.name === rank.name);
     if (player) {
       rank.points.diff = rank.points.current - (player.points ?? 0);
-      rank.elapsed = Math.floor((new Date().getTime() - new Date(player.updated_at ?? '').getTime()) / 1000);
+      // player.updated_at は日本時間で格納されているため、UTCに変換してから現在時刻との差分を計算
+      const updatedAtJST = fromZonedTime(player.updated_at ?? '', 'Asia/Tokyo');
+      const now = new Date();
+      rank.elapsed = Math.floor((now.getTime() - updatedAtJST.getTime()) / 1000);
     }
   });
 
@@ -128,6 +132,7 @@ export default async function ranking(supabase: SupabaseClient<Database>) {
     markup: record.achievement.markup ?? null,
     icon_first: record.achievement.icon.first ?? null,
     icon_last: record.achievement.icon.last ?? null,
+    discoverer: record.name ?? null,
   })).filter((element, index, self) => self.findIndex(e => e.title === element.title) === index))
 
   return;
