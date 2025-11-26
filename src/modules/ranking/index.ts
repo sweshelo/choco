@@ -132,6 +132,7 @@ export default async function ranking(supabase: SupabaseClient<Database>) {
     markup: record.achievement.markup ?? null,
     icon_first: record.achievement.icon.first ?? null,
     icon_last: record.achievement.icon.last ?? null,
+    discoverer: record.name ?? null,
   })).filter((element, index, self) => self.findIndex(e => e.title === element.title) === index))
 
   return;
