@@ -100,9 +100,6 @@ export default {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
-    const supabase = getSupabaseClient(env);
-    await fetchScheduleWithLogging(supabase);
-
     return new Response(`
         Hello, this is choco, worker of Enma-V2!
 
