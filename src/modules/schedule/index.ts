@@ -24,7 +24,7 @@ const processEvents = (events: Schedule[], initialYear = 2023) => {
     // 開始日時を解析
     const startData = parseDateString(event.started_at!);
     // 並び順が昇順なので、前のイベントより月が小さい場合は年がロールオーバーしているとみなす
-    if (lastStartMonth !== null && startData.month < lastStartMonth) {
+    if (lastStartMonth !== null && startData.month < lastStartMonth && lastStartMonth === 12) {
       currentYear++;
     }
     lastStartMonth = startData.month;
