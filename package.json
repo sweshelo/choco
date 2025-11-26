@@ -51,6 +51,6 @@
     "esbuild": "^0.25.0",
     "git-cz": "^4.9.0",
     "prettier": "^3.4.2",
-    "supabase": "^2.0.0"
+    "supabase": "^2.62.5"
   }
 }
