@@ -117,6 +117,7 @@ export type Database = {
           point: number
           ranking: number
           recorded_at: string | null
+          version: string | null
         }
         Insert: {
           achievement: string
@@ -129,6 +130,7 @@ export type Database = {
           point: number
           ranking: number
           recorded_at?: string | null
+          version?: string | null
         }
         Update: {
           achievement?: string
@@ -141,6 +143,7 @@ export type Database = {
           point?: number
           ranking?: number
           recorded_at?: string | null
+          version?: string | null
         }
         Relationships: [
           {
@@ -208,6 +211,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_play_count_ranking: {
+        Args: never
+        Returns: {
+          achievement: string
+          chara: string
+          play_count: number
+          player_name: string
+        }[]
+      }
       get_player_record: {
         Args: { player_name: string }
         Returns: {

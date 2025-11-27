@@ -42,6 +42,7 @@ export const getAllSeasonRecord = async (supabase: SupabaseClient<Database>) => 
       .gte('recorded_at', season?.started_at)
       .lt('elapsed', 600)
       .lt('diff', 500)
+      .is('version', null)
       .range(offset, offset + pageSize - 1); // オフセットと上限を指定
 
     if (season?.ended_at) {

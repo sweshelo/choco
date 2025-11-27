@@ -7,17 +7,17 @@ import { differenceInDays, differenceInHours } from "date-fns";
 
 const DEFAULT_DATE = "2000-01-01T00:00:00Z";
 
-const fetchRankingWithLogging = async (supabase: SupabaseClient) => {
+const fetchRankingWithLogging = async (supabase: SupabaseClient, version: string | null = null) => {
   const start = new Date();
 
   // 深夜～早朝は実行しない
   const hour = (start.getUTCHours() + 9) % 24
   console.info("current time: ", hour)
-  if (hour >= 1 && hour <= 5) return;
+  if (hour >= 1 && hour <= 7) return;
 
   try {
     console.info(`> Session START @ ${start.toUTCString()}`);
-    await ranking(supabase)
+    await ranking(supabase, version)
     console.info(`Duration: ${(new Date().getTime() - start.getTime()) / 1000}sec.`)
     console.info('=== Completed ===\n')
   } catch (e) {
@@ -77,16 +77,17 @@ const main = async (env: Env) => {
     return
   }
 
-  // 12時間おき
+  // 24時間おき
   const daily = await env.CF_KV.get('lastrun_daily');
-  if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 12) {
+  if (differenceInHours(new Date(), new Date(daily || DEFAULT_DATE)) >= 24) {
     await analyzeWithLogging(supabase);
     await env.CF_KV.put('lastrun_daily', new Date().toISOString())
     return
   }
 
   // デフォルト3分おき (Wranglerのcron設定に依存)
-  await fetchRankingWithLogging(supabase);
+  // version は 空文字列の場合は null にする
+  await fetchRankingWithLogging(supabase, await env.CF_KV.get('version') || null);
 }
 
 export default {
