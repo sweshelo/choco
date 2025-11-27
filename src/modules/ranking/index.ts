@@ -11,7 +11,7 @@ const originalPageURL = (index: number) => {
   return `https://p.eagate.573.jp/game/chase2jokers/ccj/ranking/index.html?page=${index}&rid=${month}`;
 };
 
-export default async function ranking(supabase: SupabaseClient<Database>) {
+export default async function ranking(supabase: SupabaseClient<Database>, version: string | null = null) {
   const ranking: Ranking[] = [];
 
   await Promise.all(
@@ -100,6 +100,7 @@ export default async function ranking(supabase: SupabaseClient<Database>) {
                 },
               },
               recordedAt,
+              version,
             });
           });
       } catch (e) {
