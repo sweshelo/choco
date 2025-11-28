@@ -50,7 +50,7 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
     player_name: record.name,
     chara: record.chara,
     point: record.points.current,
-    diff: record.points.diff,
+    diff: (record.points.diff && record.points.diff <= 32767 && record.points.diff >= 50) ? record.points.diff : undefined,
     ranking: record.rank,
     achievement: record.achievement.title,
     recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSS"),
@@ -60,7 +60,7 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
   const { error: insertError } = await supabase.from('record').insert(records.filter(record => record.diff !== 0));
   console.info('=== Updated ===')
   records.filter(record => record.diff !== 0).forEach(record => {
-    console.info("%s - %dP (+%dP) | ♺ %dsec.", record.player_name, record.point, record.diff, record.elapsed)
+    console.info(`${record.player_name} - ${record.point}P (+${record.diff}P) | ♺ ${record.elapsed}sec.`)
   })
 
   if (insertError) {
