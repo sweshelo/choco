@@ -50,7 +50,7 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
     player_name: record.name,
     chara: record.chara,
     point: record.points.current,
-    diff: (record.points.diff && record.points.diff <= 32767 && record.points.diff >= 50) ? record.points.diff : null,
+    diff: (typeof record.points.diff === 'number' && record.points.diff <= 32767 && record.points.diff >= 50) ? record.points.diff : null,
     ranking: record.rank,
     achievement: record.achievement.title,
     recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSS"),
