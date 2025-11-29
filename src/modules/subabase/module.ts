@@ -85,7 +85,7 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
 
 export type Achievement = Omit<DBAchievement, 'created_at' | 'id'>
 export const upsertAchievements = async (supabase: SupabaseClient<Database>, achievements: Achievement[]) => {
-  const { error } = await supabase.from('achievement').upsert(achievements, { onConflict: 'title' })
+  const { error } = await supabase.from('achievement').upsert(achievements, { onConflict: 'title, markup' })
   if (error) console.error(error);
 
   return;
