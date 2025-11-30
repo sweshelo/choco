@@ -83,10 +83,72 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
   return;
 }
 
+// 特殊処理をスキップする称号名の定数（今後増える可能性を考慮し配列で管理）
+const SKIP_MARKUP_UPDATE_TITLES = ['鬼ヶ丘体育高校'];
+
 export type Achievement = Omit<DBAchievement, 'created_at' | 'id'>
 export const upsertAchievements = async (supabase: SupabaseClient<Database>, achievements: Achievement[]) => {
-  const { error } = await supabase.from('achievement').upsert(achievements, { onConflict: 'title, markup' })
-  if (error) console.error(error);
+  // 1. 既存のachievementsを全て取得（DBの型にはidが含まれる）
+  const { data: existingAchievements, error: fetchError } = await supabase
+    .from('achievement')
+    .select('id, title, markup');
+  
+  if (fetchError) {
+    console.error(fetchError);
+    return;
+  }
+
+  const achievementsToInsert: Achievement[] = [];
+  const achievementsToUpdate: { id: number; markup: string | null }[] = [];
+
+  // 2. 各achievementを処理
+  for (const achievement of achievements) {
+    // titleをキーに既存レコードを検索
+    const existing = existingAchievements?.find(e => e.title === achievement.title);
+    
+    if (existing) {
+      // 既存レコードがある場合
+      // 条件: markup === title AND 新markup !== 旧markup AND titleが例外リストに含まれない
+      if (
+        existing.markup === existing.title &&
+        achievement.markup !== existing.markup &&
+        !SKIP_MARKUP_UPDATE_TITLES.includes(existing.title)
+      ) {
+        // markupのみ更新（existingからidを取得）
+        achievementsToUpdate.push({
+          id: existing.id,
+          markup: achievement.markup
+        });
+      }
+      // その他の既存レコードはスキップ（何もしない）
+    } else {
+      // レコードがない場合はinsert対象に追加
+      achievementsToInsert.push(achievement);
+    }
+  }
+
+  // 3. Insert処理
+  if (achievementsToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from('achievement')
+      .insert(achievementsToInsert);
+    
+    if (insertError) {
+      console.error('Insert error:', insertError);
+    }
+  }
+
+  // 4. Update処理
+  for (const updateData of achievementsToUpdate) {
+    const { error: updateError } = await supabase
+      .from('achievement')
+      .update({ markup: updateData.markup })
+      .eq('id', updateData.id);
+    
+    if (updateError) {
+      console.error('Update error:', updateError);
+    }
+  }
 
   return;
 }
