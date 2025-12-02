@@ -87,7 +87,9 @@ const main = async (env: Env) => {
 
   // デフォルト3分おき (Wranglerのcron設定に依存)
   // version は 空文字列の場合は null にする
-  await fetchRankingWithLogging(supabase, await env.CF_KV.get('version') || null);
+  const version = await env.CF_KV.get('version')
+  console.info(version)
+  await fetchRankingWithLogging(supabase, version || null);
 }
 
 export default {
