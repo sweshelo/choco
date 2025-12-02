@@ -55,6 +55,7 @@ export const insertRecords = async (supabase: SupabaseClient<Database>, _records
     achievement: record.achievement.title,
     recorded_at: format(record.recordedAt, "yyyy-MM-dd'T'HH:mm:ss.SSS"),
     elapsed: record.elapsed,
+    version: record.version,
   }))
 
   const { error: insertError } = await supabase.from('record').insert(records.filter(record => record.diff !== 0));
