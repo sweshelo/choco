@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { format, parse } from 'date-fns';
+import { parse } from 'date-fns';
 import { fromZonedTime } from 'date-fns-tz';
 import { Ranking } from '@/types/chase/ranking';
 import { Achievement, fetchAnons, fetchUsers, insertRecords, upsertAchievements } from '../subabase/module';
@@ -7,8 +7,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/schema';
 
 const originalPageURL = (index: number) => {
-  const month = format(new Date(), 'yyyyMM');
-  return `https://p.eagate.573.jp/game/chase2jokers/ccj/ranking/index.html?page=${index}&rid=${month}`;
+  return `https://p.eagate.573.jp/game/chase2jokers/ccj/ranking/index.html?page=${index}`;
 };
 
 export default async function ranking(supabase: SupabaseClient<Database>, version: string | null) {
